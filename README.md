@@ -1,6 +1,6 @@
 # Text Editor
 
-A mini text editor built from scrath with Java.
+A mini text editor built from scratch with Java.
 TODO: add features
 
 TODO: add screenshot
