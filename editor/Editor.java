@@ -43,7 +43,7 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
 
     static final int WINDOW_WIDTH = 500;
     static final int WINDOW_HEIGHT = 500;
-    static final int STARTING_FONT_SIZE = 100;
+    static final int STARTING_FONT_SIZE = 50;
 
     Node sentinel;
     Node current;
@@ -110,6 +110,7 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
         setScrollBar(0);
 
         // Scroll bar listener: gets position changes from moving and updates the layout of the text
+        // lay out all texts again in response to text window resize
         scrollBar.valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
@@ -393,6 +394,8 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
                 if (temp.next.isNewLine) {
                     break;
                 }
+                // decides whether the cursor will be in front or behind the char below 
+                // the current cursor
                 double position1 = temp.input.getX() + temp.input.getLayoutBounds().getWidth();
                 double position2 = temp.next.input.getX() + temp.next.input.getLayoutBounds().getWidth();
                 double distance1 = Math.abs(cursor.getX() - position1);
@@ -433,6 +436,8 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
                     break;
                 }
 
+                // decides whether the cursor will be in front or behind the char above 
+                // the current cursor
                 double position1 = temp.input.getX() + temp.input.getLayoutBounds().getWidth();
                 double position2 = temp.previous.input.getX() + temp.previous.input.getLayoutBounds().getWidth();
                 double distance1 = Math.abs(cursor.getX() - position1);
@@ -463,6 +468,8 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
             Node p = sentinel.next;
             double yPosOnText = mousePressedY + scrollBar.getValue();
             double desiredLineY;
+
+            // find the correct line where mouse click happened
             while (p != sentinel) {
                 if ((yPosOnText >= p.input.getY()) && (yPosOnText <= p.input.getY() + p.input.getLayoutBounds().getHeight())) {
                     break;
@@ -472,6 +479,7 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
 
             desiredLineY = p.input.getY();
 
+            // get last char in desired line
             while (p.input.getX() <= mousePressedX && p != sentinel) {
                 if (p.input.getY() == desiredLineY) {
                     p = p.next;
@@ -482,6 +490,9 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
 
             p = p.previous;
 
+            // position1 is the top left x coord
+            // position2 is the top right x coord
+            // determines whether cursor will be on the left or right of a char
             double position1 = p.input.getX();
             double position2 = p.input.getX() + p.input.getLayoutBounds().getWidth();
             double distance1 = Math.abs(mousePressedX - position1);
@@ -565,6 +576,8 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
         snapToCursor();
     }
 
+    // when the cursor moves off the screen vertically, the scrollbar will snap to
+    // the cursor and display it on the screen
     void snapToCursor() {
         if (cursor.getY() + cursor.getHeight() > scene.getHeight() + scrollBar.getValue()) {
             setScrollBar(cursor.getY() + cursor.getHeight() - scene.getHeight());
@@ -599,6 +612,9 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
 
             double textWidth = Math.round(p.input.getLayoutBounds().getWidth());
             double widthWithBar = scene.getWidth() - scrollBar.getLayoutBounds().getWidth();
+            // if text goes off screen horizontally
+            // if in the middle of a word, keep getting previous chars until
+            // you find a space so that the entire word can move to the next line
             if (x + textWidth >= widthWithBar && p.previous != sentinel) {
                 Node temp = p;
                 p = p.previous;
@@ -608,6 +624,9 @@ public class Editor extends Application implements EventHandler<KeyEvent> {
                         textWidth = Math.round(p.input.getLayoutBounds().getWidth());
                         break;
                     }
+                    // if char already at position 0, move to next line
+                    // ex: ab on the first line, if you put cursor before a and hit enter
+                    // ab will be on the second line
                     if (p.input.getX() == 0) {
                         p = temp;
                         break;
